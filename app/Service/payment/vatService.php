@@ -26,7 +26,6 @@ class vatService
     }
     // Get Vat Method End ****************************************************
 
-
     // Update Or Create Vat Method Start ****************************************************
     public function updateOrCreateVat($request)
     {
@@ -42,6 +41,7 @@ class vatService
                 } else {
                     $vat = Vat::create(['vat_percentage' => $request->input('vat_percentage')]);
                 }
+
                 return ResponseHelper::Out(true, 'Vat Created/Updated Successfully', 200);
             }
         } catch (Exception $e) {

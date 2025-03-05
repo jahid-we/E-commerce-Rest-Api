@@ -2,14 +2,14 @@
 
 namespace App\Service\invoice;
 
-use Exception;
-use App\Models\Vat;
-use App\Models\Invoice;
-use App\Helper\SSLCommerz;
-use App\Models\ProductCart;
 use App\Helper\ResponseHelper;
-use App\Models\InvoiceProduct;
+use App\Helper\SSLCommerz;
 use App\Models\CustomerProfile;
+use App\Models\Invoice;
+use App\Models\InvoiceProduct;
+use App\Models\ProductCart;
+use App\Models\Vat;
+use Exception;
 use Illuminate\Support\Facades\DB;
 
 class invoiceService
@@ -76,11 +76,12 @@ class invoiceService
             DB::commit();
 
             return ResponseHelper::Out(true, [
-                ['paymentMethod' => $paymentMethod, 'payable' => $payable, 'vat' => $vat, 'total' => $total]
+                ['paymentMethod' => $paymentMethod, 'payable' => $payable, 'vat' => $vat, 'total' => $total],
             ], 200);
 
         } catch (Exception $e) {
             DB::rollBack();
+
             return ResponseHelper::Out(false, 'Failed to create invoice', 500);
         }
     }
