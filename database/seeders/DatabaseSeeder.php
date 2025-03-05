@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             InvoiceProductSeeder::class,
             PolicySeeder::class,
             SslcommerzAccountSeeder::class,
+            VatSeeder::class,
         ]);
 
     }

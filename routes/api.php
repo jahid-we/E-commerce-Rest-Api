@@ -7,6 +7,7 @@ use App\Http\Controllers\customerProfile\customerProfileController;
 use App\Http\Controllers\invoice\invoiceController;
 use App\Http\Controllers\invoice\invoiceProductController;
 use App\Http\Controllers\payment\sslcommerzController;
+use App\Http\Controllers\payment\vatController;
 use App\Http\Controllers\product\productCartController;
 use App\Http\Controllers\product\productReviewController;
 use App\Http\Controllers\product\productWishController;
@@ -106,4 +107,12 @@ Route::controller(sslcommerzController::class)->group(function () {
     Route::post('/payment-fail', 'PaymentFail'); // Handle failed payment response
     Route::post('/payment-cancel', 'PaymentCancel'); // Handle canceled payment response
     Route::post('/payment-ipn', 'PaymentIPN'); // Instant Payment Notification (IPN) handler
+});
+
+// =====================================================
+// ================== VAT Routes =======================
+// =====================================================
+Route::controller(vatController::class)->middleware([TokenVerification::class])->group(function () {
+    Route::get('/get-vat', 'getVat'); // Retrieve VAT details
+    Route::post('/add-vat', 'updateOrCreateVat'); // Add VAT or update existing VAT
 });

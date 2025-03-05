@@ -2,13 +2,14 @@
 
 namespace App\Service\invoice;
 
-use App\Helper\ResponseHelper;
-use App\Helper\SSLCommerz;
-use App\Models\CustomerProfile;
-use App\Models\Invoice;
-use App\Models\InvoiceProduct;
-use App\Models\ProductCart;
 use Exception;
+use App\Models\Vat;
+use App\Models\Invoice;
+use App\Helper\SSLCommerz;
+use App\Models\ProductCart;
+use App\Helper\ResponseHelper;
+use App\Models\InvoiceProduct;
+use App\Models\CustomerProfile;
 use Illuminate\Support\Facades\DB;
 
 class invoiceService
@@ -24,25 +25,26 @@ class invoiceService
             $payment_status = 'Pending';
             $delivery_status = 'Pending';
 
-            $cusProfile = CustomerProfile::where('user_id', $userId)->first();
-            $cus_details = "Name: $cusProfile->cus_name, Address: $cusProfile->cus_add, City: $cusProfile->cus_city, Phone: $cusProfile->cus_phone";
-            $ship_details = "Name: $cusProfile->ship_name, Address: $cusProfile->ship_add, City: $cusProfile->ship_city, Phone: $cusProfile->ship_phone";
+            $cusProfile = CustomerProfile::where('user_id', $userId)->firstOrFail();
 
-            // Payment calculation
+            $cus_details = "Name: {$cusProfile->cus_name}, Address: {$cusProfile->cus_add}, City: {$cusProfile->cus_city}, Phone: {$cusProfile->cus_phone}";
+            $ship_details = "Name: {$cusProfile->ship_name}, Address: {$cusProfile->ship_add}, City: {$cusProfile->ship_city}, Phone: {$cusProfile->ship_phone}";
 
-            $total = 0;
+            // Get total cart price in a single query
+            $total = ProductCart::where('user_id', $userId)->sum('price');
 
-            $cartList = ProductCart::where('user_id', $userId)->get();
+            // Fetch VAT percentage efficiently
+            $vat_percentage = Vat::value('vat_percentage'); // Directly fetch single column
+            $numericVat = intval(str_replace('%', '', $vat_percentage));
 
-            foreach ($cartList as $cart) {
-                $total += $cart->price;
-            }
-            $vat = ($total * 5) / 100;
+            $vat = ($total * $numericVat) / 100;
             $payable = $total + $vat;
 
+            // Create Invoice
             $invoice = Invoice::create([
                 'total' => $total,
-                'vat' => $vat,
+                'vat_percentage' => $vat_percentage,
+                'vat_amount' => $vat,
                 'payable' => $payable,
                 'cus_details' => $cus_details,
                 'ship_details' => $ship_details,
@@ -54,28 +56,35 @@ class invoiceService
 
             $invoiceId = $invoice->id;
 
-            foreach ($cartList as $cart) {
-                $invoiceProduct = InvoiceProduct::create([
+            // Bulk Insert for Invoice Products
+            $cartList = ProductCart::where('user_id', $userId)->get(['product_id', 'qty', 'price']);
+            $invoiceProducts = $cartList->map(function ($cart) use ($invoiceId, $userId) {
+                return [
                     'invoice_id' => $invoiceId,
-                    'product_id' => $cart['product_id'],
+                    'product_id' => $cart->product_id,
                     'user_id' => $userId,
-                    'qty' => $cart['qty'],
-                    'sale_price' => $cart['price'],
-                ]);
-            }
+                    'qty' => $cart->qty,
+                    'sale_price' => $cart->price,
+                ];
+            })->toArray();
+
+            InvoiceProduct::insert($invoiceProducts); // Bulk insert instead of looping
+
+            // Initiate Payment
             $paymentMethod = SSLCommerz::InitiatePayment($cusProfile, $payable, $tran_id, $userEmail);
 
             DB::commit();
 
-            return ResponseHelper::Out('success', [['paymentMethod' => $paymentMethod, 'payable' => $payable, 'vat' => $vat, 'total' => $total]], 200);
+            return ResponseHelper::Out(true, [
+                ['paymentMethod' => $paymentMethod, 'payable' => $payable, 'vat' => $vat, 'total' => $total]
+            ], 200);
 
         } catch (Exception $e) {
             DB::rollBack();
-
             return ResponseHelper::Out(false, 'Failed to create invoice', 500);
         }
-
     }
+
     // Create Invoice Method End **********************************
 
     // Get Invoice Method Start **********************************

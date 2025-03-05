@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\payment;
 
-use Illuminate\Http\Request;
-use App\Service\payment\vatService;
 use App\Http\Controllers\Controller;
+use App\Service\payment\vatService;
+use Illuminate\Http\Request;
 
 class vatController extends Controller
 {
@@ -23,4 +23,12 @@ class vatController extends Controller
         return $this->vat->getVat($request);
     }
     // Get Vat Method End ****************************************************
+
+    // Update Or Create Vat Method Start ****************************************************
+    public function updateOrCreateVat(Request $request)
+    {
+        return $this->vat->updateOrCreateVat($request);
+    }
+    // Update Or Create Vat Method End ****************************************************
+
 }

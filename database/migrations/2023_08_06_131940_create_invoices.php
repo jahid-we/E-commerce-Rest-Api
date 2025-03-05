@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->string('total', 50);
-            $table->string('vat', 50);
+            $table->string('vat_percentage',50);
+            $table->string('vat_amount', 50);
             $table->string('payable', 50);
             $table->string('cus_details', 500);
             $table->string('ship_details', 500);
