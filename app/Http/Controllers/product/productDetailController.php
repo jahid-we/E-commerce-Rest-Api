@@ -15,4 +15,12 @@ class productDetailController extends Controller
     {
         $this->productDetail = $productDetail;
     }
+
+
+    // Get product detail by product id Start ***********************
+    public function ProductDetailsById(Request $request)
+    {
+        return $this->productDetail->ProductDetailsById($request);
+    }
+    // Get product detail by product id End *************************
 }

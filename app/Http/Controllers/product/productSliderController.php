@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\product;
 
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Service\product\productSliderService;
 
@@ -17,4 +18,10 @@ class productSliderController extends Controller
         $this->productSlider = $productSlider;
 
     }
+    //  Get all productSlider Start ***********************
+    public function getProductSlider(Request $request)
+    {
+        return $this->productSlider->getProductSlider($request);
+    }
+    // Get all productSlider End *******************************
 }
